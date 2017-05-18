@@ -106,39 +106,53 @@ Failer.prototype.used = false
 
 OMeta = {
   _apply: function(rule) {
-    var memoRec = this.input.memo[rule]
-    if (memoRec == undefined) {
-      var origInput = this.input,
-          failer    = new Failer()
-      if (this[rule] === undefined)
-        throw 'tried to apply undefined rule "' + rule + '"'
-      this.input.memo[rule] = failer
-      this.input.memo[rule] = memoRec = {ans: this[rule].call(this), nextInput: this.input}
-      if (failer.used) {
-        var sentinel = this.input
-        while (true) {
-          try {
-            this.input = origInput
-            var ans = this[rule].call(this)
-            if (this.input == sentinel)
-              throw fail
-            memoRec.ans       = ans
-            memoRec.nextInput = this.input
-          }
-          catch (f) {
-            if (f != fail)
-              throw f
-            break
+    recDepth++;
+    if (doneTranslating) {
+      // console.log(" ".repeat(recDepth), rule);
+    }
+    try {
+      var memoRec = this.input.memo[rule]
+      // !(memoRec instanceof Failer)
+      if (memoRec == undefined || rule.slice(0, 6) == "super_") {
+        var origInput = this.input,
+            failer    = new Failer()
+        if (this[rule] === undefined)
+          throw 'tried to apply undefined rule "' + rule + '"'
+        this.input.memo[rule] = failer
+        this.input.memo[rule] = memoRec = {ans: this[rule].call(this), nextInput: this.input}
+        if (failer.used) {
+          var sentinel = this.input
+          while (true) {
+            try {
+              this.input = origInput
+              var ans = this[rule].call(this)
+              if (this.input == sentinel)
+                throw fail
+              memoRec.ans       = ans
+              memoRec.nextInput = this.input
+            }
+            catch (f) {
+              if (f != fail)
+                throw f
+              break
+            }
           }
         }
       }
+      else if (memoRec instanceof Failer) {
+        memoRec.used = true
+        throw fail
+      }
+      this.input = memoRec.nextInput
+      return memoRec.ans
+    } catch (e) {
+      throw e;
+    } finally {
+      if (doneTranslating) {
+        // console.log(" ".repeat(recDepth), "#### leaving", rule);
+      }
+      recDepth--;
     }
-    else if (memoRec instanceof Failer) {
-      memoRec.used = true
-      throw fail
-    }
-    this.input = memoRec.nextInput
-    return memoRec.ans
   },
 
   // note: _applyWithArgs and _superApplyWithArgs are not memoized, so they can't be left-recursive
