@@ -69,9 +69,19 @@ SqlParser.keywords["sql"] = true;
 
 a = SqlParser.matchAll("var bla = sql {{sele{ct som{e}th}ing()}}", "topLevel")
 
-
-
-console.log(a)
+ometa PipelineParser <: JSParser {
+  expr = super("expr"):e pipelineTok pipelineRhs(e):r -> r | super("expr"),
+  pipelineHead = "name":f,
+  pipelineRhs :val = (super("expr"):d pipelineTok pipelineRhs(["call", d, val]):r -> r) | (expr:expr -> ["call", expr, val]),
+  pipelineTok = spaces pipelineOp,
+  special = pipelineOp | super("special"),
+  pipelineOp = ``|>''
+}
+a = PipelineParser.matchAll("var a = 1 + 1 |> function (a) {return 2 * a;} |> def.func |> ghi.bind(this)", "topLevel");
+// a = PipelineParser.matchAll("f(a)", "expr");
+console.log(JSON.stringify(a))
 
 b = BSJSTranslator.match(a, "trans")
+
 console.log(b);
+console.log(eval("var id = function(a) { return a; }; var def = { func: id }; ghi = id; " + b + "; a"));
