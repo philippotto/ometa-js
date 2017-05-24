@@ -38,6 +38,7 @@ objectThatDelegatesTo = function(x, props) {
   for (var p in props)
     if (props.hasOwnProperty(p))
       r[p] = props[p]
+  r.orginalObjectWithoutDelegation = props
   return r
 }
 

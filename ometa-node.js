@@ -32,7 +32,7 @@ translateCode = function(s) {
   });
   return BSOMetaJSTranslator.match(tree, "trans", undefined, translationError)
 }
-const nodePlayground = fs.readFileSync('./node-playground.js').toString();
+const nodePlayground = fs.readFileSync('./composition/node-playground.js').toString();
 
 console.log("Starting translation...")
 var doneTranslating = false;
@@ -40,4 +40,6 @@ var translatedCode = translateCode(nodePlayground);
 var doneTranslating = true;
 var recDepth = 0;
 console.log("Successfully translated. Now eval'ing...")
+debugger;
+
 eval(translatedCode);
